@@ -1,0 +1,3 @@
+*box
+.vagrant
+dockers/jenkins/jenkins_home/*
