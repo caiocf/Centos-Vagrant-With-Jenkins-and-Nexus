@@ -12,10 +12,11 @@ Vagrant.configure("2") do |config|
 
   # Every Vagrant development environment requires a box. You can search for
   # boxes at https://atlas.hashicorp.com/search.
+
   config.vm.box = "centos/7"
   config.vm.synced_folder ".", "/vagrant", type:"virtualbox"
   config.vm.network :forwarded_port, guest: 80, host: 8888
-
+  config.vbguest.iso_path = "VBoxGuestAdditions.iso"
   # Disable automatic box update checking. If you disable this, then
   # boxes will only be checked for updates when the user runs
   # `vagrant box outdated`. This is not recommended.
@@ -51,6 +52,8 @@ Vagrant.configure("2") do |config|
  
     # Customize the amount of memory on the VM:
     vb.memory = "8192"
+	vb.name = "dev-box"
+	
   end
   #
   # View the documentation for the provider you are using for more
@@ -84,6 +87,7 @@ Vagrant.configure("2") do |config|
 	sudo yum -y install docker-engine
 	sudo groupadd docker
 	sudo usermod -aG docker vagrant
+	sudo systemctl start docker
 	sudo systemctl enable docker
 	
 	# Install nginx
@@ -97,20 +101,26 @@ Vagrant.configure("2") do |config|
     sudo systemctl set-default graphical.target
     sudo systemctl start graphical.target
 	
-	# Install Maven
-    sudo yum -y install java-1.8.0-openjdk-devel-debug java-1.8.0-openjdk-devel maven
-	
 	# Install Nexus
 	docker pull sonatype/nexus3
-	docker rm nexus
-	docker run -d -p 48001:8081 --name nexus -e NEXUS_CONTEXT=nexus sonatype/nexus3
+	docker rm -f nexus || echo "Nexus docker does not exists. No Action needed"
+	docker run -d -p 48001:8081 --name nexus --restart=unless-stopped -e NEXUS_CONTEXT=nexus sonatype/nexus3
 	sudo cp /vagrant/dockers/nexus/nginx.conf /etc/nginx/default.d/nexus.conf
+	
+	# Install Maven
+    sudo yum -y install java-1.8.0-openjdk-devel-debug java-1.8.0-openjdk-devel maven
+	mkdir .m2 || echo ".m2 dir already exist"
+	cp /vagrant/maven_settings.xml .m2/settings.xml
 	
 	# Installing Jenkins
 	docker pull jenkins
-	docker rm jenkins
-	docker run -d -p 49001:8080 --name jenkins -v /vagrant/dockers/jenkins/jenkins_home:/var/jenkins_home:z -t jenkins --prefix=/jenkins
+	docker rm -f jenkins || echo "Nexus docker does not exists. No Action needed"
+	docker run -d -p 49001:8080 --name jenkins --restart=unless-stopped -v /vagrant/dockers/jenkins/jenkins_home:/var/jenkins_home:z -t jenkins --prefix=/jenkins
 	sudo cp /vagrant/dockers/jenkins/nginx.conf /etc/nginx/default.d/jenkins.conf
-	
+
+	# Start nginx
+	sudo systemctl stop nginx
+	sudo systemctl start nginx
+
   SHELL
 end

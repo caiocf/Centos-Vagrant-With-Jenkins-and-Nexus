@@ -1,3 +1,5 @@
 *box
 .vagrant
 dockers/jenkins/jenkins_home/*
+TIB_bwce_2.2.1_linux26gl23_x86_64.zip
+VBoxGuestAdditions.iso
