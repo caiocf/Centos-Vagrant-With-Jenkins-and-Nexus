@@ -122,5 +122,7 @@ Vagrant.configure("2") do |config|
 	sudo systemctl stop nginx
 	sudo systemctl start nginx
 
+    sudo yum -y install git-gui
+
   SHELL
 end
